@@ -1,6 +1,6 @@
 'use strict';
 
-const IssueModel = require(process.cwd() + '/models/Issue.js');
+const IssuesModel = require(process.cwd() + '/models/Issue.js');
 const ProjectModel = require(process.cwd() + '/models/Project.js');
 
 
@@ -9,16 +9,28 @@ module.exports = function (app) {
   app.route('/api/issues/:project')
   
     .get(async function (req, res){
-      try{
-        let project = req.params.project;
-        const filters = { ...req.query, project };
-
-        if (filters.open !== undefined){
-          filters.open = filters.open === 'true'; 
-        }
+      let projectName = req.params.project;
+      try {
+        const projectDoc = await ProjectModel.findOne({name: projectName})  
+          if (!projectDoc){
+            res.json([{error:'Project not found'}])
+            return;
+          }
         
-        const issues = await IssueModel.find(filters)
-        res.json(issues);
+        const filters = {projectId: projectDoc._id,... req.query}
+        
+          if ('open' in filters) {
+            filters.open = filters.open === 'true';
+          }
+        
+        const issuesResult = await IssuesModel.find(filters)
+          if(!issuesResult){
+            res.json([{error: 'No issues found'}])
+            return;
+          }
+        console.log(issuesResult)
+        res.json(issuesResult)
+      
       } catch (error){
       res.json({error: error.message});
       }
@@ -33,13 +45,12 @@ module.exports = function (app) {
         }
 
         const existingProjectModel = await ProjectModel.findOne({ name: project });
-        console.log(existingProjectModel)
         if (!existingProjectModel){
           const existingProjectModel = new ProjectModel({ name: project })
           await existingProjectModel.save();
         }
 
-        const newIssue = new IssueModel({
+        const newIssue = new IssuesModel({
           projectId   : existingProjectModel._id ,
           issue_title,
           issue_text,  
@@ -52,7 +63,6 @@ module.exports = function (app) {
         });
         
         const savedIssue = await newIssue.save();
-        console.log(savedIssue)
         res.json(savedIssue)
       
       } catch (error){
@@ -62,12 +72,10 @@ module.exports = function (app) {
     
     .put(function (req, res){
       let project = req.params.project;
-      //console.log("put "+ project)
     })
     
     .delete(function (req, res){
       let project = req.params.project;
-      //console.log("delete "+ project)
     });
     
 };

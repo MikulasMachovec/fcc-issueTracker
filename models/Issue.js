@@ -16,6 +16,6 @@ const issueSchema = new Schema(
     { versionKey: false }
 );
 
-const IssueModel = mongoose.model('Issues', issueSchema);
+const IssuesModel = mongoose.model('Issues', issueSchema);
 
-module.exports = IssueModel;
+module.exports = IssuesModel;

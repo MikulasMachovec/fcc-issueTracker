@@ -11,12 +11,12 @@ module.exports = function (app) {
    .get(async (req, res) => {
     let projectName = req.params.project;
     try {
-      const project = await ProjectModel.findOne({name: projectName})
+      let project = await ProjectModel.findOne({name: projectName})
         if(!project){
           res.json([{error: "project not found" }])
           return;
         } else {
-          const issue = await IssuesModel.find({
+          let issue = await IssuesModel.find({
             projectId: project._id,
             ...req.query,
           });
@@ -43,13 +43,13 @@ module.exports = function (app) {
           throw new Error("required field(s) missing")
         }
 
-        const existingProjectModel = await ProjectModel.findOne({ name: project });
+        let existingProjectModel = await ProjectModel.findOne({ name: project });
         if (!existingProjectModel){
-          const existingProjectModel = new ProjectModel({ name: project })
+          existingProjectModel = new ProjectModel({ name: project })
           await existingProjectModel.save();
         }
 
-        const newIssue = new IssuesModel({
+        let newIssue = new IssuesModel({
           projectId   : existingProjectModel._id ,
           issue_title: issue_title || "",
           issue_text: issue_text || "",  
@@ -60,8 +60,8 @@ module.exports = function (app) {
           open: true,         
           status_text: status_text || "", 
         });
-        const savedIssue = await newIssue.save();
-        res.json(savedIssue)
+        await newIssue.save();
+        res.json(newIssue)
       
       } catch (error){
         res.json({error: error.message})
